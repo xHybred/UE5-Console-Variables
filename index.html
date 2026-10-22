@@ -297,6 +297,11 @@ a:hover { text-decoration: underline; }
   margin-top: 12px;
 }
 
+.filters-toggle { display: none; }
+
+.filters-toggle .chev { width: 15px; height: 15px; transition: transform 0.15s ease; }
+.toolbar.is-expanded .filters-toggle .chev { transform: rotate(180deg); }
+
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .chip { position: relative; display: inline-flex; }
 .chip input { position: absolute; opacity: 0; width: 1px; height: 1px; }
@@ -518,6 +523,33 @@ tbody tr:hover td { background: var(--row-hover); }
 @media (max-width: 900px) {
   .hero-inner { grid-template-columns: 1fr; }
   .meta-card { max-width: 520px; }
+
+  .filters-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    width: 100%;
+    margin-top: 8px;
+    padding: 8px 13px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--panel);
+    color: var(--muted);
+    font: 550 12.5px/1.3 var(--sans);
+    cursor: pointer;
+  }
+  .filters-toggle:hover { color: var(--text); border-color: var(--faint); }
+
+  .toolbar-extra { display: none; }
+  .toolbar.is-expanded .toolbar-extra {
+    display: block;
+    max-height: calc(100vh - 150px);
+    max-height: calc(100dvh - 150px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  .toolbar-extra .prefixes { margin-top: 10px; }
 }
 
 @media (max-width: 720px) {
@@ -608,29 +640,36 @@ tbody tr:hover td { background: var(--row-hover); }
         </div>
       </form>
 
-      <div class="toolbar-row">
-        <div class="chips" role="group" aria-label="Result types">
-          <label class="chip">
-            <input type="checkbox" id="Var" onchange="OnInputChange()" name="ConsoleVariables" value="ConsoleVariables" checked>
-            <span class="chip-text">Console Variables</span>
-          </label>
-          <label class="chip">
-            <input type="checkbox" id="Cmd" onchange="OnInputChange()" name="ConsoleCommands" value="ConsoleCommands">
-            <span class="chip-text">Console Commands</span>
-          </label>
-          <label class="chip">
-            <input type="checkbox" id="Exec" onchange="OnInputChange()" name="Exec" value="Exec">
-            <span class="chip-text">Exec Commands</span>
+      <button id="filters-toggle" class="filters-toggle" type="button" aria-expanded="false" aria-controls="toolbar-extra">
+        <span class="filters-toggle-label">Filters &amp; categories</span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+      </button>
+
+      <div id="toolbar-extra" class="toolbar-extra">
+        <div class="toolbar-row">
+          <div class="chips" role="group" aria-label="Result types">
+            <label class="chip">
+              <input type="checkbox" id="Var" onchange="OnInputChange()" name="ConsoleVariables" value="ConsoleVariables" checked>
+              <span class="chip-text">Console Variables</span>
+            </label>
+            <label class="chip">
+              <input type="checkbox" id="Cmd" onchange="OnInputChange()" name="ConsoleCommands" value="ConsoleCommands">
+              <span class="chip-text">Console Commands</span>
+            </label>
+            <label class="chip">
+              <input type="checkbox" id="Exec" onchange="OnInputChange()" name="Exec" value="Exec">
+              <span class="chip-text">Exec Commands</span>
+            </label>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="SearchInHelpId" onchange="OnInputChange()" name="SearchInHelpName" value="SearchInHelpValue">
+            <span class="switch-track" aria-hidden="true"></span>
+            <span>Search in help</span>
           </label>
         </div>
-        <label class="switch">
-          <input type="checkbox" id="SearchInHelpId" onchange="OnInputChange()" name="SearchInHelpName" value="SearchInHelpValue">
-          <span class="switch-track" aria-hidden="true"></span>
-          <span>Search in help</span>
-        </label>
-      </div>
 
-      <nav id="prefixdemo" class="prefixes" aria-label="Categories"></nav>
+        <nav id="prefixdemo" class="prefixes" aria-label="Categories"></nav>
+      </div>
     </div>
   </section>
 
@@ -908,6 +947,8 @@ function OnLinkClick(value)
  document.getElementById("SearchInHelpId").checked = false;
  
  Rebuild(value);
+
+ SetFiltersExpanded(false);
 
  window.scrollTo({ top: 0, behavior: "smooth" });
 
@@ -10953,6 +10994,49 @@ function CopyText(text)
   if(!button) return;
 
   OnLinkClick(button.getAttribute("data-prefix") || "");
+ });
+})();
+
+function SetFiltersExpanded(bExpanded)
+{
+ var toolbar = document.getElementById("toolbar");
+ var button = document.getElementById("filters-toggle");
+ if(!toolbar || !button) return;
+
+ toolbar.classList.toggle("is-expanded", bExpanded);
+ button.setAttribute("aria-expanded", bExpanded ? "true" : "false");
+
+ var label = button.querySelector(".filters-toggle-label");
+ if(label)
+ {
+  label.textContent = bExpanded ? "Hide filters & categories" : "Filters & categories";
+ }
+}
+
+(function initFiltersToggle()
+{
+ var button = document.getElementById("filters-toggle");
+ if(!button) return;
+
+ button.addEventListener("click", function()
+ {
+  var toolbar = document.getElementById("toolbar");
+  SetFiltersExpanded(!toolbar.classList.contains("is-expanded"));
+ });
+})();
+
+(function initSearchCollapse()
+{
+ var input = document.getElementById("input1");
+ if(!input) return;
+
+ input.addEventListener("input", function()
+ {
+  var toolbar = document.getElementById("toolbar");
+  if(toolbar && toolbar.classList.contains("is-expanded"))
+  {
+   SetFiltersExpanded(false);
+  }
  });
 })();
 
